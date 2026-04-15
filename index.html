@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroVoz IA - Sistema de Rehabilitación Vocal</title>
+    <script src="https://www.paypal.com/sdk/js?client-id=AcmaUjiPfbtVL3BmXdC4yu8wXofXOCAitBFQnj1aYh1q3TDMQ2E2YwSUWxu7X8OaM8Od61XX-X76-sDU&currency=USD"></script>
+    
+    <style>
+        :root { --primary: #0077b6; --dark: #1d3557; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light); text-align: center; }
+        .header { background: var(--dark); color: white; padding: 40px 20px; }
+        .container { max-width: 600px; margin: -30px auto 40px; }
+        .box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary); }
+        .price { font-size: 2.5em; font-weight: bold; margin: 20px 0; color: #333; }
+        .hidden { display: none; }
+        #success-box { border-top: 5px solid #2a9d8f; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>NeuroVoz IA</h1>
+    <p>Tecnología de Rehabilitación Vocal Neurocognitiva</p>
+</div>
+
+<div class="container">
+    <div id="pay-section" class="box">
+        <h2>Acceso Premium de por Vida</h2>
+        <p>Incluye análisis de biomarcadores ilimitado y acceso a la App Móvil.</p>
+        <div class="price">$19.99 <span style="font-size: 15px; color: #666;">USD</span></div>
+        <div id="paypal-button-container"></div>
+    </div>
+
+    <div id="success-box" class="box hidden">
+        <h2 style="color: #2a9d8f;">¡Pago Completado!</h2>
+        <p>Tu correo ha sido registrado en nuestra base de datos segura.</p>
+        <p><strong>Pasos siguientes:</strong></p>
+        <ul style="text-align: left; display: inline-block;">
+            <li>Abre la App NeuroVoz en tu móvil.</li>
+            <li>Ingresa con el mismo correo de tu cuenta de PayPal.</li>
+            <li>¡Comienza tu rehabilitación!</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // --- CONFIGURACIÓN DE SUPABASE (CON TUS DATOS REALES) ---
+    const SUPABASE_URL = "https://wqczmyshcqjklaqimpmw.supabase.co/rest/v1/usuarios_premium";
+    const SUPABASE_KEY = "sb_publishable_XbrSe1rj8FmWBwQUflItdQ_CQ7tNGZX";
+
+    // --- LÓGICA DE PAYPAL ---
+    paypal.Buttons({
+        createOrder: (data, actions) => {
+            return actions.order.create({
+                purchase_units: [{
+                    description: "Acceso Premium NeuroVoz IA",
+                    amount: { value: '19.99' }
+                }]
+            });
+        },
+        onApprove: (data, actions) => {
+            return actions.order.capture().then(async (details) => {
+                const emailPagador = details.payer.email_address;
+                
+                // Registro automático en la Base de Datos
+                await registrarUsuario(emailPagador);
+
+                // Mostrar mensaje de éxito
+                document.getElementById('pay-section').classList.add('hidden');
+                document.getElementById('success-box').classList.remove('hidden');
+            });
+        }
+    }).render('#paypal-button-container');
+
+    async function registrarUsuario(email) {
+        try {
+            const response = await fetch(SUPABASE_URL, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ 
+                    email: email, 
+                    activo: true,
+                    fecha_pago: new Date().toISOString()
+                })
+            });
+            console.log("Usuario registrado con éxito en NeuroVoz Cloud.");
+        } catch (error) {
+            console.error("Error de registro:", error);
+        }
+    }
+</script>
+</body>
+</html>
